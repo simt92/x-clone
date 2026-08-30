@@ -1,44 +1,29 @@
-"use client"
+"use client";
 
-import { useState } from "react";
 import PostItem from "@/components/PostItem";
 import type { Post } from "@/types/post";
 
 type Props = {
-    initialPosts: Post[];
+    posts: Post[];
     currentUserId: number | null;
+    onDelete: (postId: number) => void;
 };
 
 export default function PostList({
-    initialPosts,
+    posts,
     currentUserId,
+    onDelete,
 }: Props) {
-    const [posts, setPosts] = useState(initialPosts);
-
-    const handleDelete = async (postId: number) => {
-        const response = await fetch(`/api/posts/${postId}`, {
-            method: "DELETE",
-        });
-
-        if (!response.ok) {
-            return;
-        }
-
-        setPosts((currentPosts) =>
-            currentPosts.filter((post) => post.id !== postId)
-        );
-    };
-
     return (
         <>
-            {posts.map((post) => {
+            {posts.map((post) => (
                 <PostItem
                     key={post.id}
                     post={post}
                     currentUserId={currentUserId}
-                    onDelete={handleDelete}
+                    onDelete={onDelete}
                 />
-            })}
+            ))}
         </>
     );
 }

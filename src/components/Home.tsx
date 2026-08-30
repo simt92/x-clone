@@ -1,84 +1,75 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import PostItem from "@/components/PostItem";
+import PostList from "@/components/PostList";
 import PostComposer from "@/components/PostComposer";
-import type { Like, Post } from "@/types/post";
+import type { Post } from "@/types/post";
 
 type Props = {
     currentUserId: number | null;
 };
 
-export default function Home({ currentUserId }: Props) {
+export default function Home({
+    currentUserId,
+}: Props) {
     const [posts, setPosts] = useState<Post[]>([]);
 
     useEffect(() => {
         const fetchPosts = async () => {
             const response = await fetch("/api/posts");
+
+            if(!response.ok) {
+                return;
+            }
+
             const data: Post[] = await response.json();
 
             setPosts(data);
         };
 
         fetchPosts();
+        
     }, []);
 
-    const handlePost = async (content: string) => {
-        const response = await fetch("/api/posts", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                content: content,
-            }),
-        });
-
-        const newPost: Post = await response.json();
-
-        setPosts([newPost, ...posts]);
+    const handleCreate = (newPost: Post) => {
+        setPosts((currentPosts) => [
+            newPost,
+            ...currentPosts,
+        ]);
     };
 
-    const handleDelete = async (id: number) => {
-        const response = await fetch(`/api/posts/${id}`, {
-            method: "DELETE",
-        });
+    const handleDelete = async (postId: number) => {
+        const response = await fetch(
+            `/api/posts/${postId}`,
+            {
+                method: "DELETE",
+            }
+        );
 
         if (!response.ok) {
-            console.error("削除に失敗しました");
             return;
         }
 
-        const newPosts = posts.filter((post) => post.id !== id);
-
-        setPosts(newPosts);
+        setPosts((currentPosts) =>
+            currentPosts.filter(
+                (post) => post.id !== postId
+            )
+        );
     };
 
     return (
         <main>
-            <h1>HOME</h1>
-
-            {currentUserId ? (
-                <PostComposer onPost={handlePost} />
-            ) : (
-                <div>
-                    <p>投稿するにはログインしてください</p>
-
-                    <Link href="/login">
-                        ログイン
-                    </Link>
-                </div>
+            {currentUserId && (
+                <PostComposer
+                    onCreate={handleCreate}
+                />
             )}
 
-            {posts.map((post) => (
-                <PostItem
-                    key={post.id}
-                    post={post}
-                    currentUserId={currentUserId}
-                    onDelete={() => handleDelete(post.id)}
-                />
-            ))}
+            <PostList
+                posts={posts}
+                currentUserId={currentUserId}
+                onDelete={handleDelete}
+            />
         </main>
     );
 }

@@ -1,22 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import type {Post} from "@/types/post";
 
 type Props = {
-    onPost: (content: string) => void;
+    onCreate: (newPost: Post) => void;
 };
 
-export default function PostComposer({ onPost }: Props) {
+export default function PostComposer({ onCreate }: Props) {
     const [content, setContent] = useState("");
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if (content.trim() === "") {
+        if (!content.trim()) {
             return;
         }
 
-        onPost(content);
+        const response = await fetch("/api/posts", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+                content,
+            }),
+        });
+
+        if(!response.ok) {
+            return;
+        }
+
+        const newPost: Post = await response.json();
+
+        onCreate(newPost);
+
         setContent("");
     };
 
