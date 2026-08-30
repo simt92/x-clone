@@ -3,13 +3,16 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import FollowButton from "@/components/FollowButton";
 import PostList from "@/components/PostList";
+
 type Props = {
     params: Promise<{
         username: string;
     }>;
 };
 
-export default async function UserProfile({ params }: Props) {
+export default async function UserProfile({
+    params,
+}: Props) {
     const session = await auth();
 
     const currentUserId = session?.user?.id
@@ -20,8 +23,9 @@ export default async function UserProfile({ params }: Props) {
 
     const user = await prisma.user.findUnique({
         where: {
-            username: username,
+            username,
         },
+
         include: {
             posts: {
                 include: {
@@ -74,21 +78,27 @@ export default async function UserProfile({ params }: Props) {
         notFound();
     }
 
-    const isFollowing = (user.followers?.length ?? 0) > 0;
+    const isFollowing =
+        (user.followers?.length ?? 0) > 0;
 
-    const isOwnProfile = currentUserId === user.id;
+    const isOwnProfile =
+        currentUserId === user.id;
 
     return (
         <main>
             <h1>{user.name}</h1>
+
             <p>@{user.username}</p>
 
-            <p>
-                {user._count.following} フォロー中
-            </p>
-            <p>
-                {user._count.followers} フォロワー
-            </p>
+            <div>
+                <span>
+                    {user._count.following} フォロー中
+                </span>
+
+                <span>
+                    {user._count.followers} フォロワー
+                </span>
+            </div>
 
             {!isOwnProfile && (
                 <FollowButton
