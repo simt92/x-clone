@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import FollowButton from "@/components/FollowButton";
 import PostList from "@/components/PostList";
+import Link from "next/link";
 
 type Props = {
     params: Promise<{
@@ -91,9 +92,9 @@ export default async function UserProfile({
             <p>@{user.username}</p>
 
             <div>
-                <span>
+                <Link href={`/users/${user.username}/following`}>
                     {user._count.following} フォロー中
-                </span>
+                </Link>
 
                 <span>
                     {user._count.followers} フォロワー
