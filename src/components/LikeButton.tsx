@@ -1,28 +1,25 @@
 "use client"
 
 import { useState } from "react";
-import type { Like } from "@/types/post";
 import { usePathname, useRouter } from "next/navigation";
 
 type Props = {
     postId: number;
-    initialLike: Like | null;
+    initialIsLiked: boolean;
     initialLikeCount: number;
 };
 
 export default function LikeButton({
     postId,
-    initialLike,
+    initialIsLiked,
     initialLikeCount,
 }: Props) {
-    const [like, setLike] = useState<Like | null>(initialLike);
+    const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [likeCount, setLikeCount] = useState(initialLikeCount);
     const [isLoading, setIsLoading] = useState(false);
 
     const router = useRouter();
     const pathname = usePathname();
-
-    const isLiked = like !== null;
 
     const handleLike = async () => {
         if (isLoading) {
@@ -46,12 +43,11 @@ export default function LikeButton({
             }
 
             if (isLiked) {
-                setLike(null);
+                setIsLiked(false);
                 setLikeCount((count) => count - 1);
             } else {
-                const newLike: Like = await response.json();
-
-                setLike(newLike);
+                setIsLiked(true);
+                
                 setLikeCount((count) => count + 1);
             }
         } finally {

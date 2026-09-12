@@ -10,7 +10,7 @@ type Props = {
     }>;
 };
 
-export default async function FollowingPage({
+export default async function FollowersPage({
     params,
 }: Props) {
     const session = await auth();
@@ -27,9 +27,9 @@ export default async function FollowingPage({
         },
 
         include: {
-            following: {
+            followers: {
                 include: {
-                    following: {
+                    follower: {
                         select: {
                             id: true,
                             username: true,
@@ -56,25 +56,29 @@ export default async function FollowingPage({
     return (
         <main>
             <h1>
-                {user.name}さんがフォロー中
+                {user.name}さんのフォロワー
             </h1>
 
-            {user.following.map((follow) => {
-                const targetUser = follow.following;
+            {user.followers.map((follow) => {
+                const targetUser = follow.follower;
 
-                const isFollowing = (targetUser.followers?.length ?? 0) > 0;
+                const isFollowing =
+                    (targetUser.followers?.length ?? 0) > 0;
 
-                const isOwnProfile = currentUserId === targetUser.id;
+                const isOwnProfile =
+                    currentUserId === targetUser.id;
 
                 return (
                     <div key={follow.id}>
-                        <Link href={`/users/${targetUser.username}`}>
+                        <Link
+                            href={`/users/${targetUser.username}`}
+                        >
                             <strong>
                                 {targetUser.name}
                             </strong>
 
                             <p>
-                                {targetUser.username}
+                                @{targetUser.username}
                             </p>
                         </Link>
 
@@ -82,7 +86,6 @@ export default async function FollowingPage({
                             <FollowButton
                                 username={targetUser.username}
                                 initialIsFollowing={isFollowing}
-                                refreshAfterChange={false}
                             />
                         )}
                     </div>

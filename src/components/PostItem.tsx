@@ -27,7 +27,7 @@ export default function PostItem({
 
             <LikeButton
                 postId={post.id}
-                initialLike={post.likes?.[0] ?? null}
+                initialIsLiked={(post.likes?.length ?? 0) > 0}
                 initialLikeCount={post._count.likes}
             />
             

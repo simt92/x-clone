@@ -96,15 +96,16 @@ export default async function UserProfile({
                     {user._count.following} フォロー中
                 </Link>
 
-                <span>
+                <Link href={`/users/${user.username}/followers`}>
                     {user._count.followers} フォロワー
-                </span>
+                </Link>
             </div>
 
             {!isOwnProfile && (
                 <FollowButton
                     username={user.username}
-                    initialFollowing={isFollowing}
+                    initialIsFollowing={isFollowing}
+                    refreshAfterChange={false}
                 />
             )}
 

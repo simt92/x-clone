@@ -5,14 +5,16 @@ import { useRouter } from "next/navigation";
 
 type Props = {
     username: string;
-    initialFollowing: boolean;
+    initialIsFollowing: boolean;
+    refreshAfterChange?: boolean;
 };
 
 export default function FollowButton({
     username,
-    initialFollowing,
+    initialIsFollowing,
+    refreshAfterChange = true,
 }: Props) {
-    const [isFollowing, setIsFollowing] = useState(initialFollowing);
+    const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
     const [isLoading, setIsLoading] = useState(false);
 
     const router = useRouter();
@@ -48,7 +50,9 @@ export default function FollowButton({
 
             setIsFollowing(!isFollowing);
 
-            router.refresh();
+            if (refreshAfterChange) {
+                router.refresh();
+            }
         } finally {
             setIsLoading(false);
         }

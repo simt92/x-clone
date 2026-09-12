@@ -1,14 +1,48 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(
+    request: Request
+) {
     const session = await auth();
 
     const userId = session?.user?.id
         ? Number(session.user.id)
         : null;
 
+    const { searchParams } = new URL(request.url);
+
+    const feed = searchParams.get("feed");
+
+    let timelineUserIds: number[] = [];
+
+    if (feed === "following" && userId) {
+        const following = await prisma.follow.findMany({
+            where: {
+                followerId: userId,
+            },
+
+            select: {
+                followingId: true,
+            },
+        });
+
+        const followingIds = following.map(
+            (follow) => follow.followingId
+        );
+
+        timelineUserIds = [userId, ...followingIds];
+    }
+
     const posts = await prisma.post.findMany({
+        where: feed === "following" && userId
+            ? {
+                authorId: {
+                    in: timelineUserIds,
+                },
+            }
+            : undefined,
+
         include: {
             author: {
                 select: {

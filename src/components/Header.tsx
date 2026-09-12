@@ -15,6 +15,10 @@ export default function Header({ user }: Props) {
                 X Clone
             </Link>
 
+            <Link href="/search">
+                検索
+            </Link>
+
             {user ? (
                 <div>
                     <Link href={`/users/${user.username}`}>
@@ -27,14 +31,14 @@ export default function Header({ user }: Props) {
             ) : (
                 <div>
                     <Link href="/login">
-                    ログイン
+                        ログイン
                     </Link>
 
                     <Link href="/register">
-                    新規登録
+                        新規登録
                     </Link>
                 </div>
-        )}
+            )}
         </header>
     );
 }
