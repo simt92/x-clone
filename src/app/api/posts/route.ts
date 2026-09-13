@@ -80,19 +80,58 @@ export async function POST(request: Request) {
 
     if (!session?.user.id) {
         return Response.json(
-            { message: "ログインが必要です" },
-            { status: 401 }
+            {
+                message: "ログインが必要です"
+            },
+            {
+                status: 401
+            }
         );
     }
 
     const body = await request.json();
 
+    if (!body.content?.trim()) {
+        return Response.json(
+            {
+                message: "投稿内容を入力してください"
+            },
+            {
+                status: 400,
+            }
+        );
+    }
+
     const userId = Number(session.user.id);
+
+    const replyToId = typeof body.replyToId === "number"
+        ? body.replyToId
+        : null;
+
+    if (replyToId !== null) {
+        const replyToPost = await prisma.post.findUnique({
+            where: {
+                id: replyToId,
+            },
+        });
+
+        if (!replyToPost) {
+            return Response.json(
+                {
+                    message: "返信先の投稿が見つかりません",
+                },
+                {
+                    status: 404,
+                }
+            );
+        }
+    }
 
     const newPost = await prisma.post.create({
         data: {
             content: body.content,
             authorId: userId,
+            replyToId,
         },
 
         include: {
@@ -118,5 +157,10 @@ export async function POST(request: Request) {
         },
     });
 
-    return Response.json(newPost);
+    return Response.json(
+        newPost,
+        {
+            status: 201
+        }
+    );
 }

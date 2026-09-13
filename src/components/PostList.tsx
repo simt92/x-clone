@@ -1,103 +1,110 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { prisma } from "@/lib/prisma";
 import PostComposer from "@/components/PostComposer";
 import PostItem from "@/components/PostItem";
 import type { Post } from "@/types/post";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+
 
 type Props = {
     initialPosts?: Post[];
     currentUserId: number | null;
     showComposer?: boolean;
+    feed?: "recommended" | "following";
 };
 
-export default function PostList({
+export default async function PostList({
     initialPosts,
     currentUserId,
     showComposer = false,
+    feed = "recommended",
 }: Props) {
-    const [feed, setFeed] = useState<"recommended" | "following">("recommended");
-    const [posts, setPosts] = useState<Post[]>(
-        initialPosts ?? []
-    );
+    let posts: Post[];
 
-    const router = useRouter();
+    if (initialPosts !== undefined) {
+        posts = initialPosts;
+    } else {
+        let timelineUserIds: number[] = [];
 
-    useEffect(() => {
-        if (initialPosts !== undefined) {
-            return;
-        }
+        if (feed === "following" &&
+            currentUserId !== null
+        ) {
+            const following = await prisma.follow.findMany({
+                where: {
+                    followerId: currentUserId,
+                },
 
-        const fetchPosts = async () => {
-            const response = await fetch(`/api/posts?feed=${feed}`);
+                select: {
+                    followingId: true,
+                },
+            });
 
-            if (!response.ok) {
-                return;
-            }
-
-            const data: Post[] = await response.json();
-
-            setPosts(data);
-        };
-
-        fetchPosts();
-    }, [initialPosts, feed]);
-
-    const handleCreate = (newPost: Post) => {
-        setPosts((currentPosts) => [
-            newPost,
-            ...currentPosts,
-        ]);
-    };
-
-    const handleDelete = async (postId: number) => {
-        const response = await fetch(
-            `/api/posts/${postId}`,
-            {
-                method: "DELETE",
-            }
-        );
-
-        if (!response.ok) {
-            return;
-        }
-
-        setPosts((currentPosts) =>
-            currentPosts.filter(
-                (post) => post.id !== postId
-            )
-        );
-    };
-
-    const handleFollowingFeed = () => {
-        if (currentUserId === null) {
-            router.push(
-                `/login?callbackUrl=${encodeURIComponent("/")}`
+            const followingIds = following.map(
+                (follow) => follow.followingId
             );
 
-            return;
+            timelineUserIds = [currentUserId, ...followingIds,];
         }
 
-        setFeed("following");
-    };
+        posts = await prisma.post.findMany({
+            where: feed === "following" && currentUserId !== null
+                ? {
+                    authorId: {
+                        in: timelineUserIds,
+                    },
+                }
+                : undefined,
 
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        name: true,
+                    },
+                },
+
+                _count: {
+                    select: {
+                        likes: true,
+                    },
+                },
+
+                likes: currentUserId !== null
+                    ? {
+                        where: {
+                            userId: currentUserId,
+                        },
+                    }
+                    : false,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+    }
     return (
         <>
             {initialPosts === undefined && (
-                <div>
-                    <button onClick={() => setFeed("recommended")}>
+                <nav>
+                    <Link href="/?feed=recommended">
                         おすすめ
-                    </button>
+                    </Link>
 
-                    <button onClick={handleFollowingFeed}>
-                        フォロー中
-                    </button>
-                </div>
+                    {currentUserId !== null ? (
+                        <Link href="/?feed=following">
+                            フォロー中
+                        </Link>
+                    ) : (
+                        <Link href={`/login?callbackUrl=${encodeURIComponent("/?feed=following")}`}
+                        >
+                            フォロー中
+                        </Link>
+                    )}
+                </nav>
             )}
 
             {showComposer && currentUserId && (
-                <PostComposer onCreate={handleCreate} />
+                <PostComposer />
             )}
 
             {posts.map((post) => (
@@ -105,7 +112,6 @@ export default function PostList({
                     key={post.id}
                     post={post}
                     currentUserId={currentUserId}
-                    onDelete={handleDelete}
                 />
             ))}
         </>

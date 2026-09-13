@@ -1,7 +1,10 @@
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import LikeButton from "@/components/LikeButton";
+import ReplyComposer from "@/components/ReplyComposer";
+import PostItem from "@/components/PostItem";
 
 type Props = {
     params: Promise<{
@@ -12,7 +15,7 @@ type Props = {
 export default async function PostDetail({ params }: Props) {
     const session = await auth();
 
-    const userId = session?.user?.id
+    const currentUserId = session?.user?.id
         ? Number(session.user.id)
         : null;
 
@@ -37,13 +40,43 @@ export default async function PostDetail({ params }: Props) {
                 },
             },
 
-            likes: userId
+            likes: currentUserId
                 ? {
                     where: {
-                        userId,
+                        userId: currentUserId,
                     },
                 }
                 : false,
+
+            replies: {
+                include: {
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            name: true,
+                        },
+                    },
+
+                    _count: {
+                        select: {
+                            likes: true,
+                        },
+                    },
+
+                    likes: currentUserId
+                        ? {
+                            where: {
+                                userId: currentUserId
+                            },
+                        }
+                        : false,
+                },
+
+                orderBy: {
+                    createdAt: "asc",
+                },
+            },
         },
     });
 
@@ -53,16 +86,46 @@ export default async function PostDetail({ params }: Props) {
 
     return (
         <main>
-            <p>{post.author.name}</p>
-            <p>{post.author.username}</p>
+            <article>
+                <Link
+                    href={`/users/${post.author.username}`}
+                >
+                    <strong>
+                        {post.author.name}
+                    </strong>
 
-            <p>{post.content}</p>
+                    <span>
+                        @{post.author.username}
+                    </span>
+                </Link>
 
-            <LikeButton
-                postId={post.id}
-                initialLike={post.likes?.[0] ?? null}
-                initialLikeCount={post._count.likes}
+                <p>{post.content}</p>
+
+                <LikeButton
+                    postId={post.id}
+                    initialIsLiked={(post.likes?.length ?? 0) > 0}
+                    initialLikeCount={post._count.likes}
+                />
+            </article>
+
+            <ReplyComposer
+                replyToId={post.id}
             />
-        </main>
+
+            <section>
+                <h2>返信</h2>
+
+                {post.replies.length === 0 ? (
+                    <p>まだ返信はありません</p>
+                ) : (
+                    post.replies.map((reply) => (
+                        <PostItem
+                            key={reply.id}
+                            post={reply}
+                            currentUserId={currentUserId}
+                        />
+                    ))
+                )}
+            </section>        </main>
     );
 }

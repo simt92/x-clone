@@ -1,16 +1,34 @@
 import { auth } from "@/auth";
-import Home from "@/components/Home";
+import PostList from "@/components/PostList";
 
-export default async function Page() {
+type Props = {
+  searchParams: Promise<{
+    feed?: string;
+  }>;
+};
+
+export default async function Page({
+  searchParams,
+}: Props) {
   const session = await auth();
 
   const currentUserId = session?.user?.id
     ? Number(session.user.id)
     : null;
 
+  const { feed } = await searchParams;
+
+  const selectedFeed = feed === "following"
+    ? "following"
+    : "recommended";
+
   return (
-    <>
-      <Home currentUserId={currentUserId} />
-    </>
+    <main>
+      <PostList
+        currentUserId={currentUserId}
+        showComposer={true}
+        feed={selectedFeed}
+      />
+    </main>
   );
 }
