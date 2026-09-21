@@ -63,13 +63,36 @@ export default async function PostList({
                     },
                 },
 
+                replyTo: {
+                    select: {
+                        id: true,
+
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+
                 _count: {
                     select: {
                         likes: true,
+                        replies: true,
                     },
                 },
 
                 likes: currentUserId !== null
+                    ? {
+                        where: {
+                            userId: currentUserId,
+                        },
+                    }
+                    : false,
+
+                bookmarks: currentUserId !== null
                     ? {
                         where: {
                             userId: currentUserId,

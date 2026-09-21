@@ -38,13 +38,36 @@ export default async function UserProfile({
                         },
                     },
 
+                    replyTo: {
+                        select: {
+                            id: true,
+
+                            author: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    name: true,
+                                },
+                            },
+                        },
+                    },
+
                     _count: {
                         select: {
                             likes: true,
+                            replies: true,
                         },
                     },
 
                     likes: currentUserId
+                        ? {
+                            where: {
+                                userId: currentUserId,
+                            },
+                        }
+                        : false,
+
+                    bookmarks: currentUserId !== null
                         ? {
                             where: {
                                 userId: currentUserId,

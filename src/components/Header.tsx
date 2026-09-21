@@ -19,6 +19,10 @@ export default function Header({ user }: Props) {
                 検索
             </Link>
 
+            <Link href="/bookmarks">
+                ブックマーク
+            </Link>
+
             {user ? (
                 <div>
                     <Link href={`/users/${user.username}`}>

@@ -52,9 +52,24 @@ export async function GET(
                 },
             },
 
+            replyTo: {
+                select: {
+                    id: true,
+
+                    author: {
+                        select: {
+                            id: true,
+                            username: true,
+                            name: true,
+                        },
+                    },
+                },
+            },
+
             _count: {
                 select: {
                     likes: true,
+                    replies: true,
                 },
             },
 

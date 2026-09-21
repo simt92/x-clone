@@ -5,6 +5,7 @@ import Link from "next/link";
 import LikeButton from "@/components/LikeButton";
 import ReplyComposer from "@/components/ReplyComposer";
 import PostItem from "@/components/PostItem";
+import BookmarkButton from "@/components/BookmarkButton";
 
 type Props = {
     params: Promise<{
@@ -21,64 +22,116 @@ export default async function PostDetail({ params }: Props) {
 
     const { id } = await params;
 
-    const post = await prisma.post.findUnique({
-        where: {
-            id: Number(id),
-        },
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    username: true,
-                    name: true,
-                },
+    const post =
+        await prisma.post.findUnique({
+            where: {
+                id: Number(id),
             },
 
-            _count: {
-                select: {
-                    likes: true,
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        name: true,
+                    },
                 },
-            },
 
-            likes: currentUserId
-                ? {
-                    where: {
-                        userId: currentUserId,
-                    },
-                }
-                : false,
+                replyTo: {
+                    select: {
+                        id: true,
+                        content: true,
 
-            replies: {
-                include: {
-                    author: {
-                        select: {
-                            id: true,
-                            username: true,
-                            name: true,
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                name: true,
+                            },
                         },
                     },
+                },
 
-                    _count: {
-                        select: {
-                            likes: true,
-                        },
+                _count: {
+                    select: {
+                        likes: true,
+                        replies: true,
                     },
+                },
 
-                    likes: currentUserId
+                likes:
+                    currentUserId !== null
                         ? {
                             where: {
-                                userId: currentUserId
+                                userId: currentUserId,
                             },
                         }
                         : false,
-                },
 
-                orderBy: {
-                    createdAt: "asc",
+                bookmarks: currentUserId !== null
+                    ? {
+                        where: {
+                            userId: currentUserId,
+                        },
+                    }
+                    : false,
+
+                replies: {
+                    include: {
+                        author: {
+                            select: {
+                                id: true,
+                                username: true,
+                                name: true,
+                            },
+                        },
+
+                        replyTo: {
+                            select: {
+                                id: true,
+
+                                author: {
+                                    select: {
+                                        id: true,
+                                        username: true,
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+
+                        _count: {
+                            select: {
+                                likes: true,
+                                replies: true,
+                            },
+                        },
+
+                        likes:
+                            currentUserId !== null
+                                ? {
+                                    where: {
+                                        userId:
+                                            currentUserId,
+                                    },
+                                }
+                                : false,
+
+                        bookmarks: currentUserId !== null
+                            ? {
+                                where: {
+                                    userId: currentUserId,
+                                },
+                            }
+                            : false,
+                    },
+
+                    orderBy: {
+                        createdAt: "asc",
+                    },
                 },
             },
-        },
-    });
+        });
 
     if (!post) {
         notFound();
@@ -86,6 +139,28 @@ export default async function PostDetail({ params }: Props) {
 
     return (
         <main>
+            {post.replyTo && (
+                <article>
+                    <p>返信先</p>
+
+                    <Link href={`/users${post.replyTo.author.username}`}>
+                        <strong>
+                            {post.replyTo.author.name}
+                        </strong>
+
+                        <span>
+                            @{post.replyTo.author.username}
+                        </span>
+                    </Link>
+
+                    <Link href={`/posts/${post.replyTo.id}`}>
+                        <p>
+                            {post.replyTo.content}
+                        </p>
+                    </Link>
+                </article>
+            )}
+
             <article>
                 <Link
                     href={`/users/${post.author.username}`}
@@ -106,6 +181,12 @@ export default async function PostDetail({ params }: Props) {
                     initialIsLiked={(post.likes?.length ?? 0) > 0}
                     initialLikeCount={post._count.likes}
                 />
+
+                <BookmarkButton
+                    postId={post.id}
+                    initialIsBookmarked={(post.bookmarks?.length ?? 0) > 0}
+                />
+
             </article>
 
             <ReplyComposer
