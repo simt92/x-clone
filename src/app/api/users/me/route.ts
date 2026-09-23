@@ -19,12 +19,17 @@ export async function PATCH(
 
     const body = await request.json();
 
-    if(
+    if (
         typeof body.name !== "string" ||
         (
             body.bio !== undefined &&
             body.bio !== null &&
             typeof body.bio !== "string"
+        ) ||
+        (
+            body.image !== undefined &&
+            body.image !== null &&
+            typeof body.image !== "string"
         )
     ) {
         return Response.json(
@@ -39,6 +44,7 @@ export async function PATCH(
 
     const name = body.name?.trim();
     const bio = body.bio?.trim();
+    const image = body.image?.trim();
 
     if (!name) {
         return Response.json(
@@ -81,6 +87,7 @@ export async function PATCH(
         data: {
             name,
             bio: bio || null,
+            image: image || null,
         },
 
         select: {
@@ -88,6 +95,7 @@ export async function PATCH(
             username: true,
             name: true,
             bio: true,
+            image: true,
         },
     });
 

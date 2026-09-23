@@ -212,3 +212,26 @@ button {
   color: #f4212e;
   font-size: 13px;
 }
+
+/* =========================
+   ProfileImage
+========================= */
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff3f4;
+  font-size: 28px;
+  font-weight: 700;
+}

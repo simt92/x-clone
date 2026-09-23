@@ -148,6 +148,20 @@ export default async function UserProfile({
 
     return (
         <main>
+            {user.image ? (
+                <img
+                    className="profile-avatar"
+                    src={user.image}
+                    alt={`${user.name}のプロフィール画像`}
+                    width={80}
+                    height={80}
+                />
+            ) : (
+                <div className="profile-avatar-placeholder">
+                    {user.name.charAt(0).toUpperCase()}
+                </div>
+            )}
+
             <h1>{user.name}</h1>
             <p>@{user.username}</p>
 
@@ -179,6 +193,7 @@ export default async function UserProfile({
                 <EditProfileForm
                     initialName={user.name}
                     initialBio={user.bio}
+                    initialImage={user.image}
                 />
             )}
 

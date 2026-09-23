@@ -6,17 +6,20 @@ import { useRouter } from "next/navigation";
 type Props = {
     initialName: string;
     initialBio: string | null;
+    initialImage: string | null;
 };
 
 export default function EditProfileForm({
     initialName,
     initialBio,
+    initialImage,
 }: Props) {
     const router = useRouter();
 
     const [isEditing, setIsEditing] = useState(false);
     const [name, setName] = useState(initialName);
     const [bio, setBio] = useState(initialBio ?? "");
+    const [imageFile, setImageFile] = useState<File | null>(null)
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -27,6 +30,35 @@ export default function EditProfileForm({
 
         setIsLoading(true);
         setError("");
+
+        let imageUrl = initialImage;
+
+        if (imageFile) {
+            const formData = new FormData();
+
+            formData.append(
+                "file",
+                imageFile
+            );
+
+            const uploadResponse = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!uploadResponse.ok) {
+                const data = await uploadResponse.json();
+
+                setError(data.error ?? "画像のアップロードに失敗しました");
+
+                setIsLoading(false);
+                return;
+            }
+
+            const uploadData = await uploadResponse.json();
+
+            imageUrl = uploadData.url;
+        }
 
         const response = await fetch(
             "/api/users/me",
@@ -41,6 +73,7 @@ export default function EditProfileForm({
                 body: JSON.stringify({
                     name,
                     bio,
+                    image: imageUrl,
                 }),
             }
         );
@@ -59,6 +92,7 @@ export default function EditProfileForm({
 
         setIsLoading(false);
         setIsEditing(false);
+        setImageFile(null);
 
         router.refresh();
     };
@@ -76,6 +110,25 @@ export default function EditProfileForm({
 
     return (
         <form onSubmit={handleSubmit}>
+            <div>
+                <label htmlFor="image">
+                    プロフィール画像
+                </label>
+
+                <input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                        const file = event.target.files?.[0];
+
+                        if (file) {
+                            setImageFile(file);
+                        }
+                    }}
+                />
+            </div>
+
             <div>
                 <label htmlFor="name">
                     名前
