@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import FollowButton from "@/components/FollowButton";
 import PostList from "@/components/PostList";
+import EditProfileForm from "@/components/EditProfileForm";
 import Link from "next/link";
 
 type Props = {
@@ -148,8 +149,11 @@ export default async function UserProfile({
     return (
         <main>
             <h1>{user.name}</h1>
-
             <p>@{user.username}</p>
+
+            {user.bio && (
+                <p>{user.bio}</p>
+            )}
 
             <p>{user._count.posts}件のポスト</p>
 
@@ -168,6 +172,13 @@ export default async function UserProfile({
                     username={user.username}
                     initialIsFollowing={isFollowing}
                     refreshAfterChange={false}
+                />
+            )}
+
+            {isOwnProfile && (
+                <EditProfileForm
+                    initialName={user.name}
+                    initialBio={user.bio}
                 />
             )}
 
