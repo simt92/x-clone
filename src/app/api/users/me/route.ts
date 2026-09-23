@@ -8,12 +8,8 @@ export async function PATCH(
 
     if (!session?.user?.id) {
         return Response.json(
-            {
-                error: "ログインが必要です"
-            },
-            {
-                status: 401,
-            }
+            { message: "ログインが必要です" },
+            { status: 401, }
         );
     }
 
@@ -33,12 +29,8 @@ export async function PATCH(
         )
     ) {
         return Response.json(
-            {
-                error: "入力内容が不正です",
-            },
-            {
-                status: 400
-            }
+            { message: "入力内容が不正です" },
+            { status: 400 }
         );
     }
 
@@ -48,34 +40,22 @@ export async function PATCH(
 
     if (!name) {
         return Response.json(
-            {
-                error: "名前は必須です",
-            },
-            {
-                status: 400
-            }
+            { message: "名前は必須です" },
+            { status: 400 }
         );
     }
 
     if (name.length > 50) {
         return Response.json(
-            {
-                error: "名前は50文字以内で入力してください",
-            },
-            {
-                status: 400
-            }
+            { message: "名前は50文字以内で入力してください" },
+            { status: 400 }
         );
     }
 
     if (bio && bio.length > 160) {
         return Response.json(
-            {
-                error: "自己紹介は160文字以内で入力してください",
-            },
-            {
-                status: 400
-            }
+            { message: "自己紹介は160文字以内で入力してください" },
+            { status: 400 }
         );
     }
 

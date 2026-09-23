@@ -196,6 +196,14 @@ export default async function PostDetail({ params }: Props) {
 
                 <p>{post.content}</p>
 
+                {post.image && (
+                    <img
+                        className="post-image"
+                        src={post.image}
+                        alt="投稿画像"
+                    />
+                )}
+
                 <LikeButton
                     postId={post.id}
                     initialIsLiked={(post.likes?.length ?? 0) > 0}

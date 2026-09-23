@@ -49,7 +49,7 @@ export default function EditProfileForm({
             if (!uploadResponse.ok) {
                 const data = await uploadResponse.json();
 
-                setError(data.error ?? "画像のアップロードに失敗しました");
+                setError(data.message ?? "画像のアップロードに失敗しました");
 
                 setIsLoading(false);
                 return;
@@ -81,10 +81,7 @@ export default function EditProfileForm({
         if (!response.ok) {
             const data = await response.json();
 
-            setError(
-                data.error ??
-                "プロフィールの更新に失敗しました"
-            );
+            setError(data.message ?? "プロフィールの更新に失敗しました");
 
             setIsLoading(false);
             return;

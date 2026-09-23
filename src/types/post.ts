@@ -2,6 +2,7 @@ export type Post = {
     id: number;
     content: string;
     createdAt: string | Date;
+    image: string | null;
     authorId: number;
 
     author: {

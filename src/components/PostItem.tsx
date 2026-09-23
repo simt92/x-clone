@@ -65,6 +65,14 @@ export default function PostItem({
                 </p>
             </Link>
 
+            {post.image && (
+                <img
+                    className="post-image"
+                    src={post.image}
+                    alt="投稿画像"
+                />
+            )}
+
             <div className="post-actions">
                 <LikeButton
                     postId={post.id}

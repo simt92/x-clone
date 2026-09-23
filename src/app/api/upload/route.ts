@@ -17,12 +17,8 @@ export async function POST(
 
     if (!session?.user?.id) {
         return Response.json(
-            {
-                error: "ログインが必要です"
-            },
-            {
-                status: 401
-            }
+            { message: "ログインが必要です" },
+            { status: 401 }
         );
     }
 
@@ -32,23 +28,15 @@ export async function POST(
 
     if (!(file instanceof File)) {
         return Response.json(
-            {
-                error: "画像を選択してください"
-            },
-            {
-                status: 400
-            }
+            { message: "画像を選択してください" },
+            { status: 400 }
         );
     }
 
     if (!file.type.startsWith("image/")) {
         return Response.json(
-            {
-                error: "画像ファイルのみアップロードできます"
-            },
-            {
-                status: 400
-            }
+            { message: "画像ファイルのみアップロードできます" },
+            { status: 400 }
         );
     }
 
@@ -56,12 +44,8 @@ export async function POST(
 
     if (file.size > maxSize) {
         return Response.json(
-            {
-                error: "画像は5MB以下にしてください",
-            },
-            {
-                status: 400
-            }
+            { message: "画像は5MB以下にしてください", },
+            { status: 400 }
         );
     }
 

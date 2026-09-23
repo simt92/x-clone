@@ -1,199 +1,186 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(
-    request: Request
-) {
-    const session = await auth();
+// export async function GET(
+//     request: Request
+// ) {
+//     const session = await auth();
 
-    const userId = session?.user?.id
-        ? Number(session.user.id)
-        : null;
+//     const userId = session?.user?.id
+//         ? Number(session.user.id)
+//         : null;
 
-    const { searchParams } = new URL(request.url);
+//     const { searchParams } = new URL(request.url);
 
-    const feed = searchParams.get("feed");
+//     const feed = searchParams.get("feed");
 
-    let timelineUserIds: number[] = [];
+//     let timelineUserIds: number[] = [];
 
-    if (feed === "following" && userId) {
-        const following = await prisma.follow.findMany({
-            where: {
-                followerId: userId,
-            },
+//     if (feed === "following" && userId) {
+//         const following = await prisma.follow.findMany({
+//             where: {
+//                 followerId: userId,
+//             },
 
-            select: {
-                followingId: true,
-            },
-        });
+//             select: {
+//                 followingId: true,
+//             },
+//         });
 
-        const followingIds = following.map(
-            (follow) => follow.followingId
-        );
+//         const followingIds = following.map(
+//             (follow) => follow.followingId
+//         );
 
-        timelineUserIds = [userId, ...followingIds];
-    }
+//         timelineUserIds = [userId, ...followingIds];
+//     }
 
-    const posts = await prisma.post.findMany({
-        where: feed === "following" && userId
-            ? {
-                authorId: {
-                    in: timelineUserIds,
-                },
-            }
-            : undefined,
+//     const posts = await prisma.post.findMany({
+//         where: feed === "following" && userId
+//             ? {
+//                 authorId: {
+//                     in: timelineUserIds,
+//                 },
+//             }
+//             : undefined,
 
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    username: true,
-                    name: true,
-                },
-            },
+//         include: {
+//             author: {
+//                 select: {
+//                     id: true,
+//                     username: true,
+//                     name: true,
+//                 },
+//             },
 
-            replyTo: {
-                select: {
-                    id: true,
+//             replyTo: {
+//                 select: {
+//                     id: true,
 
-                    author: {
-                        select: {
-                            id: true,
-                            username: true,
-                            name: true,
-                        },
-                    },
-                },
-            },
+//                     author: {
+//                         select: {
+//                             id: true,
+//                             username: true,
+//                             name: true,
+//                         },
+//                     },
+//                 },
+//             },
 
-            _count: {
-                select: {
-                    likes: true,
-                    replies: true,
-                    reposts: true,
-                },
-            },
+//             _count: {
+//                 select: {
+//                     likes: true,
+//                     replies: true,
+//                     reposts: true,
+//                 },
+//             },
 
-            likes: userId
-                ? {
-                    where: {
-                        userId,
-                    },
-                }
-                : false,
+//             likes: userId
+//                 ? {
+//                     where: {
+//                         userId,
+//                     },
+//                 }
+//                 : false,
 
-            bookmarks: userId
-                ? {
-                    where: {
-                        userId,
-                    },
-                }
-                : false,
+//             bookmarks: userId
+//                 ? {
+//                     where: {
+//                         userId,
+//                     },
+//                 }
+//                 : false,
 
-            reposts: userId
-                ? {
-                    where: {
-                        userId,
-                    },
-                }
-                : false,
+//             reposts: userId
+//                 ? {
+//                     where: {
+//                         userId,
+//                     },
+//                 }
+//                 : false,
 
-        },
+//         },
 
-        orderBy: {
-            createdAt: "desc",
-        },
-    });
+//         orderBy: {
+//             createdAt: "desc",
+//         },
+//     });
 
-    return Response.json(posts);
-}
+//     return Response.json(posts);
+// }
 
 export async function POST(request: Request) {
     const session = await auth();
 
     if (!session?.user.id) {
         return Response.json(
-            {
-                message: "ログインが必要です"
-            },
-            {
-                status: 401
-            }
+            { message: "ログインが必要です" },
+            { status: 401 }
         );
     }
 
     const body = await request.json();
 
-    if (!body.content?.trim()) {
+    const { content, replyToId, image } = body;
+
+    if (typeof content !== "string") {
         return Response.json(
-            {
-                message: "投稿内容を入力してください"
-            },
-            {
-                status: 400,
-            }
+            { message: "投稿内容が不正です" },
+            { status: 400 }
         );
     }
 
-    const userId = Number(session.user.id);
+    const trimmedContent = content.trim();
 
-    const replyToId = typeof body.replyToId === "number"
-        ? body.replyToId
-        : null;
+    if (
+        image !== undefined &&
+        image !== null &&
+        typeof image !== "string"
+    ) {
+        return Response.json(
+            { message: "画像のURLが不正です" },
+            { status: 400 }
+        );
+    }
 
-    if (replyToId !== null) {
-        const replyToPost = await prisma.post.findUnique({
+    if (
+        replyToId !== undefined &&
+        replyToId !== null &&
+        typeof replyToId !== "number"
+    ) {
+        return Response.json(
+            { message: "返信先が不正です" },
+            { status: 400 }
+        );
+    }
+
+    if (replyToId !== undefined && replyToId !== null) {
+        const parentPost = await prisma.post.findUnique({
             where: {
                 id: replyToId,
             },
+            select: {
+                id: true,
+            },
         });
-
-        if (!replyToPost) {
+        if (!parentPost) {
             return Response.json(
-                {
-                    message: "返信先の投稿が見つかりません",
-                },
-                {
-                    status: 404,
-                }
+                { message: "返信先の投稿が存在しません" },
+                { status: 404 }
             );
         }
     }
 
-    const newPost = await prisma.post.create({
+    const post = await prisma.post.create({
         data: {
-            content: body.content,
-            authorId: userId,
-            replyToId,
-        },
-
-        include: {
-            author: {
-                select: {
-                    id: true,
-                    username: true,
-                    name: true,
-                },
-            },
-
-            _count: {
-                select: {
-                    likes: true,
-                },
-            },
-
-            likes: {
-                where: {
-                    userId,
-                },
-            },
+            content: trimmedContent,
+            image: image ?? null,
+            authorId: Number(session.user.id),
+            replyToId: replyToId ?? null,
         },
     });
 
     return Response.json(
-        newPost,
-        {
-            status: 201
-        }
+        { message: "投稿しました" },
+        { status: 201 }
     );
 }
