@@ -6,6 +6,7 @@ import LikeButton from "@/components/LikeButton";
 import ReplyComposer from "@/components/ReplyComposer";
 import PostItem from "@/components/PostItem";
 import BookmarkButton from "@/components/BookmarkButton";
+import RepostButton from "@/components/RepostButton";
 
 type Props = {
     params: Promise<{
@@ -56,6 +57,7 @@ export default async function PostDetail({ params }: Props) {
                     select: {
                         likes: true,
                         replies: true,
+                        reposts: true,
                     },
                 },
 
@@ -69,6 +71,14 @@ export default async function PostDetail({ params }: Props) {
                         : false,
 
                 bookmarks: currentUserId !== null
+                    ? {
+                        where: {
+                            userId: currentUserId,
+                        },
+                    }
+                    : false,
+
+                reposts: currentUserId !== null
                     ? {
                         where: {
                             userId: currentUserId,
@@ -104,6 +114,7 @@ export default async function PostDetail({ params }: Props) {
                             select: {
                                 likes: true,
                                 replies: true,
+                                reposts: true,
                             },
                         },
 
@@ -124,6 +135,15 @@ export default async function PostDetail({ params }: Props) {
                                 },
                             }
                             : false,
+
+                        reposts: currentUserId !== null
+                            ? {
+                                where: {
+                                    userId: currentUserId,
+                                },
+                            }
+                            : false,
+
                     },
 
                     orderBy: {
@@ -180,6 +200,12 @@ export default async function PostDetail({ params }: Props) {
                     postId={post.id}
                     initialIsLiked={(post.likes?.length ?? 0) > 0}
                     initialLikeCount={post._count.likes}
+                />
+
+                <RepostButton
+                    postId={post.id}
+                    initialIsReposted={(post.reposts?.length ?? 0) > 0}
+                    initialRepostCount={post._count.reposts}
                 />
 
                 <BookmarkButton

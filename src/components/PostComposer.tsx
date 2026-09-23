@@ -52,7 +52,10 @@ export default function PostComposer() {
     };
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form
+            onSubmit={handleSubmit}
+            className="post-composer"
+        >
             <textarea
                 value={content}
                 onChange={(event) =>
@@ -60,13 +63,16 @@ export default function PostComposer() {
                 }
                 placeholder="いまどうしてる？"
             />
+            <div className="post-composer-actions">
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="primary-button"
+                >
+                    {isLoading ? "投稿中" : "投稿"}
+                </button>
 
-            <button
-                type="submit"
-                disabled={isLoading}
-            >
-                投稿
-            </button>
+            </div>
         </form>
     );
 }

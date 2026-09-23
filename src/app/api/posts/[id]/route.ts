@@ -16,6 +16,7 @@ export async function DELETE(
         }
         
         const  { id } = await params;
+        const postId = Number(id);
 
         const post = await prisma.post.findUnique({
             where: {
@@ -37,11 +38,40 @@ export async function DELETE(
             );
         }
 
-        await prisma.post.delete({
-            where: {
-                id: Number(id),
-            },
-        });
+        await prisma.$transaction([
+            prisma.like.deleteMany({
+                where: {
+                    postId,
+                },
+            }),
+
+            prisma.bookmark.deleteMany({
+                where: {
+                    postId,
+                },
+            }),
+
+            prisma.repost.deleteMany({
+                where: {
+                    postId,
+                },
+            }),
+
+            prisma.post.updateMany({
+                where: {
+                    replyToId: postId,
+                },
+                data: {
+                    replyToId: null,
+                },
+            }),
+
+            prisma.post.delete({
+                where: {
+                    id: postId,
+                },
+            }),
+        ]);
     
         return Response.json(
             { message: "削除しました" },

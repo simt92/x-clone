@@ -10,18 +10,20 @@ type Props = {
 
 export default function Header({ user }: Props) {
     return (
-        <header>
-            <Link href="/">
-                X Clone
-            </Link>
+        <header className="header">
+            <nav className="header-nav">
+                <Link href="/">
+                    X Clone
+                </Link>
 
-            <Link href="/search">
-                検索
-            </Link>
+                <Link href="/search">
+                    検索
+                </Link>
 
-            <Link href="/bookmarks">
-                ブックマーク
-            </Link>
+                <Link href="/bookmarks">
+                    ブックマーク
+                </Link>
+            </nav>
 
             {user ? (
                 <div>

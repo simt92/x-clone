@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import Header from "@/components/Header";
+import "./globals.css";
 
 export default async function RootLayout({
   children,
@@ -11,9 +12,11 @@ export default async function RootLayout({
   return (
     <html lang="ja">
       <body>
-        <Header user={session?.user ?? null} />
+        <div className="app-container">
+          <Header user={session?.user ?? null} />
 
-        {children}
+          {children}
+        </div>
       </body>
     </html>
   );

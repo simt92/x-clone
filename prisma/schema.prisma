@@ -23,6 +23,7 @@ model User {
   posts          Post[]
   likes          Like[]
   bookmarks      Bookmark[]
+  reposts        Repost[]
 
   following      Follow[] @relation("Follower")
   followers      Follow[] @relation("Following")
@@ -37,6 +38,7 @@ model Post {
   author         User     @relation(fields: [authorId], references: [id])
   likes          Like[]
   bookmarks      Bookmark[]
+  reposts        Repost[]
 
   replyToId      Int?
   replyTo        Post?    @relation("PostReplies", fields: [replyToId], references: [id])
@@ -60,6 +62,18 @@ model Bookmark {
 
   userId         Int
   postId         Int
+
+  user           User     @relation(fields: [userId], references: [id])
+  post           Post     @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+model Repost {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  postId         Int
+  createdAt      DateTime @default(now())
 
   user           User     @relation(fields: [userId], references: [id])
   post           Post     @relation(fields: [postId], references: [id])

@@ -5,25 +5,32 @@ import { usePathname, useRouter } from "next/navigation";
 
 type Props = {
     postId: number;
-    initialIsBookmarked: boolean;
+    initialIsReposted: boolean;
+    initialRepostCount: number;
 };
 
-export default function BookmarkButton({
+export default function RepostButton({
     postId,
-    initialIsBookmarked,
+    initialIsReposted,
+    initialRepostCount,
 }: Props) {
-    const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
+    const [isReposted, setIsReposted] = useState(initialIsReposted);
+    const [repostCount, setRepostCount] = useState(initialRepostCount);
 
     useEffect(() => {
-        setIsBookmarked(initialIsBookmarked);
-    }, [initialIsBookmarked]);
-    
+        setIsReposted(initialIsReposted);
+        setRepostCount(initialRepostCount);
+    }, [
+        initialIsReposted,
+        initialRepostCount,
+    ]);
+
     const [isLoading, setIsLoading] = useState(false);
 
     const router = useRouter();
     const pathname = usePathname();
 
-    const handleBookmark = async () => {
+    const handleRepost = async () => {
         if (isLoading) {
             return;
         }
@@ -32,9 +39,9 @@ export default function BookmarkButton({
 
         try {
             const response = await fetch(
-                `/api/posts/${postId}/bookmark`,
+                `/api/posts/${postId}/repost`,
                 {
-                    method: isBookmarked
+                    method: isReposted
                         ? "DELETE"
                         : "POST",
                 }
@@ -54,7 +61,15 @@ export default function BookmarkButton({
                 return;
             }
 
-            setIsBookmarked(!isBookmarked);
+            if (isReposted) {
+                setIsReposted(false);
+
+                setRepostCount((count) => count - 1);
+            } else {
+                setIsReposted(true);
+
+                setRepostCount((count) => count + 1);
+            }
 
             router.refresh();
         } finally {
@@ -64,12 +79,11 @@ export default function BookmarkButton({
 
     return (
         <button
-            onClick={handleBookmark}
+            onClick={handleRepost}
             disabled={isLoading}
         >
-            {isBookmarked
-                ? "🔖 保存済み"
-                : "🔖 ブックマーク"}
+            {isReposted ? "🔁" : "↻"}{" "}
+            {repostCount}
         </button>
     );
 }

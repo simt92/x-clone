@@ -9,11 +9,25 @@ type Props = {
     params: Promise<{
         username: string;
     }>;
+
+    searchParams: Promise<{
+        tab?: string;
+    }>;
 };
 
 export default async function UserProfile({
     params,
+    searchParams,
 }: Props) {
+    const { tab } = await searchParams;
+
+    const profileTab =
+        tab === "replies"
+            ? "replies"
+            : tab === "likes"
+                ? "likes"
+                : "posts"
+
     const session = await auth();
 
     const currentUserId = session?.user?.id
@@ -28,61 +42,9 @@ export default async function UserProfile({
         },
 
         include: {
-            posts: {
-                include: {
-                    author: {
-                        select: {
-                            id: true,
-                            username: true,
-                            name: true,
-                        },
-                    },
-
-                    replyTo: {
-                        select: {
-                            id: true,
-
-                            author: {
-                                select: {
-                                    id: true,
-                                    username: true,
-                                    name: true,
-                                },
-                            },
-                        },
-                    },
-
-                    _count: {
-                        select: {
-                            likes: true,
-                            replies: true,
-                        },
-                    },
-
-                    likes: currentUserId
-                        ? {
-                            where: {
-                                userId: currentUserId,
-                            },
-                        }
-                        : false,
-
-                    bookmarks: currentUserId !== null
-                        ? {
-                            where: {
-                                userId: currentUserId,
-                            },
-                        }
-                        : false,
-                },
-
-                orderBy: {
-                    createdAt: "desc",
-                },
-            },
-
             _count: {
                 select: {
+                    posts: true,
                     following: true,
                     followers: true,
                 },
@@ -108,11 +70,88 @@ export default async function UserProfile({
     const isOwnProfile =
         currentUserId === user.id;
 
+    const likedPosts =
+        profileTab === "likes"
+            ? await prisma.like.findMany({
+                where: {
+                    userId: user.id,
+                },
+
+                include: {
+                    post: {
+                        include: {
+                            author: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    name: true,
+                                },
+                            },
+
+                            replyTo: {
+                                select: {
+                                    id: true,
+
+                                    author: {
+                                        select: {
+                                            id: true,
+                                            username: true,
+                                            name: true,
+                                        },
+                                    },
+                                },
+                            },
+
+                            _count: {
+                                select: {
+                                    likes: true,
+                                    replies: true,
+                                    reposts: true,
+                                },
+                            },
+
+                            likes: currentUserId !== null
+                                ? {
+                                    where: {
+                                        userId: currentUserId,
+                                    },
+                                }
+                                : false,
+
+                            bookmarks: currentUserId !== null
+                                ? {
+                                    where: {
+                                        userId: currentUserId,
+                                    },
+                                }
+                                : false,
+
+                            reposts: currentUserId !== null
+                                ? {
+                                    where: {
+                                        userId: currentUserId,
+                                    },
+                                }
+                                : false,
+                        },
+                    },
+                },
+
+                orderBy: {
+                    id: "desc",
+                },
+            })
+            : [];
+
+    const likedPostItems = likedPosts.map((like) => like.post);
+
     return (
         <main>
             <h1>{user.name}</h1>
 
             <p>@{user.username}</p>
+
+            <p>{user._count.posts}件のポスト</p>
 
             <div>
                 <Link href={`/users/${user.username}/following`}>
@@ -134,10 +173,38 @@ export default async function UserProfile({
 
             <h2>投稿</h2>
 
-            <PostList
-                initialPosts={user.posts}
-                currentUserId={currentUserId}
-            />
+            <nav className="feed-nav">
+                <Link
+                    href={`/users/${user.username}`}
+                >
+                    投稿
+                </Link>
+
+                <Link
+                    href={`/users/${user.username}?tab=replies`}
+                >
+                    返信
+                </Link>
+
+                <Link
+                    href={`/users/${user.username}?tab=likes`}
+                >
+                    いいね
+                </Link>
+            </nav>
+
+            {profileTab === "likes" ? (
+                <PostList
+                    initialPosts={likedPostItems}
+                    currentUserId={currentUserId}
+                />
+            ) : (
+                <PostList
+                    currentUserId={currentUserId}
+                    profileUserId={user.id}
+                    profileTab={profileTab}
+                />
+            )}
         </main>
     );
 }

@@ -70,6 +70,7 @@ export async function GET(
                 select: {
                     likes: true,
                     replies: true,
+                    reposts: true,
                 },
             },
 
@@ -80,6 +81,23 @@ export async function GET(
                     },
                 }
                 : false,
+
+            bookmarks: userId
+                ? {
+                    where: {
+                        userId,
+                    },
+                }
+                : false,
+
+            reposts: userId
+                ? {
+                    where: {
+                        userId,
+                    },
+                }
+                : false,
+
         },
 
         orderBy: {

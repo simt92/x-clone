@@ -4,7 +4,8 @@ import Link from "next/link";
 import type { Post } from "@/types/post";
 import LikeButton from "@/components/LikeButton";
 import BookmarkButton from "./BookmarkButton";
-import { usePathname, useRouter } from "next/navigation";
+import RepostButton from "./RepostButton";
+import { useRouter } from "next/navigation";
 
 type Props = {
     post: Post;
@@ -18,10 +19,6 @@ export default function PostItem({
     const isOwnPost = currentUserId === post.authorId;
 
     const router = useRouter();
-
-    const pathname = usePathname();
-
-    const isBookmarksPage = pathname === "/bookmarks";
 
     const handleDelete = async () => {
         const response = await fetch(
@@ -39,21 +36,22 @@ export default function PostItem({
     };
 
     return (
-        <article>
+        <article className="post">
             <Link
                 href={`/users/${post.author.username}`}
+                className="post-author"
             >
-                <strong>
+                <span className="post-author-name">
                     {post.author.name}
-                </strong>
+                </span>
 
-                <span>
+                <span className="post-username">
                     @{post.author.username}
                 </span>
             </Link>
 
             {post.replyTo && (
-                <p>
+                <p className="reply-label">
                     <Link href={`/users/${post.replyTo.author.username}`}>
                         @{post.replyTo.author.username}
                     </Link>
@@ -62,27 +60,39 @@ export default function PostItem({
             )}
 
             <Link href={`/posts/${post.id}`}>
-                <p>{post.content}</p>
+                <p className="post-content">
+                    {post.content}
+                </p>
             </Link>
 
-            <LikeButton
-                postId={post.id}
-                initialIsLiked={(post.likes?.length ?? 0) > 0}
-                initialLikeCount={post._count.likes}
-            />
+            <div className="post-actions">
+                <LikeButton
+                    postId={post.id}
+                    initialIsLiked={(post.likes?.length ?? 0) > 0}
+                    initialLikeCount={post._count.likes}
+                />
 
-            <Link href={`/posts/${post.id}`}>
-                💬 返信 {post._count.replies}
-            </Link>
+                <Link href={`/posts/${post.id}`}>
+                    💬 返信 {post._count.replies}
+                </Link>
 
-            <BookmarkButton
-                postId={post.id}
-                initialIsBookmarked={(post.bookmarks?.length ?? 0) > 0}
-                refreshAfterChage={isBookmarksPage}
-            />
+                <RepostButton
+                    postId={post.id}
+                    initialIsReposted={(post.reposts?.length ?? 0) > 0}
+                    initialRepostCount={post._count.reposts}
+                />
+
+                <BookmarkButton
+                    postId={post.id}
+                    initialIsBookmarked={(post.bookmarks?.length ?? 0) > 0}
+                />
+            </div>
 
             {isOwnPost && (
-                <button onClick={handleDelete}>
+                <button
+                    onClick={handleDelete}
+                    className="delete-button"
+                >
                     削除
                 </button>
             )}

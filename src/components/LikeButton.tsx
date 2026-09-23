@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 type Props = {
@@ -16,6 +16,15 @@ export default function LikeButton({
 }: Props) {
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [likeCount, setLikeCount] = useState(initialLikeCount);
+
+    useEffect(() =>{
+        setIsLiked(initialIsLiked);
+        setLikeCount(initialLikeCount);
+    }, [
+        initialIsLiked,
+        initialLikeCount,
+    ]);
+    
     const [isLoading, setIsLoading] = useState(false);
 
     const router = useRouter();
@@ -47,9 +56,10 @@ export default function LikeButton({
                 setLikeCount((count) => count - 1);
             } else {
                 setIsLiked(true);
-                
                 setLikeCount((count) => count + 1);
             }
+
+            router.refresh();
         } finally {
             setIsLoading(false);
         }

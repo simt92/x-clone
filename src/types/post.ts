@@ -23,11 +23,12 @@ export type Post = {
     _count: {
         likes: number;
         replies: number;
+        reposts: number;
     };
 
     likes: Like[];
-
     bookmarks: Bookmark[];
+    reposts: Repost[];
 };
 
 export type Like = {
@@ -41,3 +42,29 @@ export type Bookmark = {
     userId: number;
     postId: number;
 };
+
+export type Repost = {
+    id: number;
+    userId: number;
+    postId: number;
+    createdAt: string | Date;
+};
+
+export type TimelineItem =
+    | {
+        type: "post";
+        post: Post;
+        createdAt: string | Date;
+    }
+    | {
+        type: "repost";
+        post: Post;
+
+        repostedBy: {
+            id: number;
+            username: string;
+            name: string;
+        };
+
+        createdAt: string | Date;
+    };

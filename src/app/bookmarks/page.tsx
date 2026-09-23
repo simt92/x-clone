@@ -50,6 +50,7 @@ export default async function BookmarksPage() {
                         select: {
                             likes: true,
                             replies: true,
+                            reposts: true,
                         },
                     },
 
@@ -64,6 +65,14 @@ export default async function BookmarksPage() {
                             userId: currentUserId,
                         },
                     },
+
+                    reposts: currentUserId !== null
+                        ? {
+                            where: {
+                                userId: currentUserId,
+                            },
+                        }
+                        : false,
                 },
             },
         },
@@ -83,6 +92,10 @@ export default async function BookmarksPage() {
                 initialPosts={posts}
                 currentUserId={currentUserId}
             />
+
+            {posts.length === 0 &&
+                <p>まだ何もありません</p>
+            }
         </main>
     );
 }
