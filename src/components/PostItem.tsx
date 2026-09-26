@@ -21,6 +21,12 @@ export default function PostItem({
     const router = useRouter();
 
     const handleDelete = async () => {
+        const confirmed = window.confirm("この投稿を削除しますか？");
+
+        if (!confirmed) {
+            return;
+        }
+
         const response = await fetch(
             `/api/posts/${post.id}`,
             {

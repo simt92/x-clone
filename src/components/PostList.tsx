@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import PostComposer from "@/components/PostComposer";
 import PostItem from "@/components/PostItem";
+import Timeline from "@/components/Timeline";
 import type { Post, TimelineItem } from "@/types/post";
 import Link from "next/link";
 
@@ -22,6 +23,8 @@ export default async function PostList({
     profileUserId,
     profileTab = "posts",
 }: Props) {
+    const PAGE_SIZE = 20;
+
     if (initialPosts !== undefined) {
         return (
             <>
@@ -55,7 +58,10 @@ export default async function PostList({
             (follow) => follow.followingId
         );
 
-        timelineUserIds = [currentUserId, ...followingIds,];
+        timelineUserIds = [
+            currentUserId,
+            ...followingIds,
+        ];
     }
 
     const posts = await prisma.post.findMany({
@@ -130,6 +136,12 @@ export default async function PostList({
                 }
                 : false,
         },
+
+        orderBy: {
+            createdAt: "desc",
+        },
+
+        take: PAGE_SIZE
     });
 
     const reposts = profileUserId !== undefined &&
@@ -216,6 +228,12 @@ export default async function PostList({
                     },
                 },
             },
+
+            orderBy: {
+                createdAt: "desc",
+            },
+
+            take: PAGE_SIZE
         });
 
     const postItems: TimelineItem[] =
@@ -233,16 +251,21 @@ export default async function PostList({
             createdAt: repost.createdAt,
         }));
 
-    const timelineItems = [...postItems, ...repostItems];
+    const timelineItems = [
+        ...postItems,
+        ...repostItems
+    ].sort((a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+    ).slice(0, PAGE_SIZE);
 
-    timelineItems.sort((a, b) =>
-        new Date(
-            b.createdAt
-        ).getTime() -
-        new Date(
-            a.createdAt
-        ).getTime()
-    );
+    const initialCursor = timelineItems.length === PAGE_SIZE
+        ? new Date(
+            timelineItems[
+                timelineItems.length - 1
+            ].createdAt
+        ).toISOString()
+        : null;
 
     return (
         <>
@@ -269,32 +292,42 @@ export default async function PostList({
                 <PostComposer />
             )}
 
-            {timelineItems.map((item) => {
-                if (item.type === "repost") {
-                    return (
-                        <div key={`repost-${item.repostedBy.id}-${item.post.id}`}
-                        >
-                            <div className="repost-label">
-                                ↻{item.repostedBy.name}
-                                さんがリポスト
+            {profileUserId === undefined ? (
+                <Timeline
+                    key={feed}
+                    initialItems={timelineItems}
+                    initialCursor={initialCursor}
+                    currentUserId={currentUserId}
+                    feed={feed}
+                />
+            ) : (
+                timelineItems.map((item) => {
+                    if (item.type === "repost") {
+                        return (
+                            <div
+                                key={`repost-${item.repostedBy.id}-${item.post.id}`}
+                            >
+                                <div className="repost-label">
+                                    ↻ {item.repostedBy.name}さんがリポスト
+                                </div>
+
+                                <PostItem
+                                    post={item.post}
+                                    currentUserId={currentUserId}
+                                />
                             </div>
+                        );
+                    }
 
-                            <PostItem
-                                post={item.post}
-                                currentUserId={currentUserId}
-                            />
-                        </div>
+                    return (
+                        <PostItem
+                            key={`post-${item.post.id}`}
+                            post={item.post}
+                            currentUserId={currentUserId}
+                        />
                     );
-                }
-
-                return (
-                    <PostItem
-                        key={`post-${item.post.id}`}
-                        post={item.post}
-                        currentUserId={currentUserId}
-                    />
-                );
-            })}
+                })
+            )}
         </>
     );
 }

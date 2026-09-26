@@ -4,6 +4,7 @@ import PostList from "@/components/PostList";
 type Props = {
   searchParams: Promise<{
     feed?: string;
+    page?: string;
   }>;
 };
 
@@ -16,18 +17,19 @@ export default async function Page({
     ? Number(session.user.id)
     : null;
 
-  const { feed } = await searchParams;
+  const params = await searchParams;
 
-  const selectedFeed = feed === "following"
-    ? "following"
-    : "recommended";
+  const feed =
+    params.feed === "following"
+      ? "following"
+      : "recommended";
 
   return (
     <main>
       <PostList
         currentUserId={currentUserId}
         showComposer={true}
-        feed={selectedFeed}
+        feed={feed}
       />
     </main>
   );
