@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function PostComposer() {
@@ -12,12 +12,17 @@ export default function PostComposer() {
 
     const router = useRouter();
 
+    const MAX_CONTENT_LENGTH = 280;
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const handleSubmit = async (
         event: React.FormEvent
     ) => {
         event.preventDefault();
 
-        if (!content.trim()) {
+        if (!content.trim() && !imageFile) {
+            setError("本文を入力してください");
             return;
         }
 
@@ -92,7 +97,15 @@ export default function PostComposer() {
 
             setImagePreview(null);
 
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+
             router.refresh();
+        } catch (error) {
+            console.error(error);
+
+            setError("通信エラーが発生しました");
         } finally {
             setIsLoading(false);
         }
@@ -105,6 +118,7 @@ export default function PostComposer() {
         >
             <textarea
                 value={content}
+                maxLength={MAX_CONTENT_LENGTH}
                 onChange={(event) =>
                     setContent(event.target.value)
                 }
@@ -118,6 +132,7 @@ export default function PostComposer() {
             )}
 
             <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={(event) => {
@@ -147,13 +162,22 @@ export default function PostComposer() {
 
                     <button
                         type="button"
+                        disabled={isLoading}
                         onClick={() => {
+                            if (isLoading) {
+                                return;
+                            }
+
                             if (imagePreview) {
                                 URL.revokeObjectURL(imagePreview);
                             }
 
                             setImageFile(null);
                             setImagePreview(null);
+
+                            if (fileInputRef.current) {
+                                fileInputRef.current.value = "";
+                            }
                         }}
                     >
                         画像を削除
@@ -162,9 +186,13 @@ export default function PostComposer() {
             )}
 
             <div className="post-composer-actions">
+                <p>
+                    {content.length} / {MAX_CONTENT_LENGTH}
+                </p>
+
                 <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || (!content.trim() && !imageFile)}
                     className="primary-button"
                 >
                     {isLoading ? "投稿中" : "投稿"}

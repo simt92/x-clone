@@ -120,7 +120,28 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    const { content, replyToId, image } = body;
+    const content = typeof body.content === "string"
+        ? body.content
+        : "";
+
+    const replyToId = body.replyToId ?? null;
+    const image = body.image ?? null;
+
+    if (!content.trim() && !image) {
+        return Response.json(
+            { message: "本文を入力してください" },
+            { status: 400 }
+        );
+    }
+
+    if (content.trim().length > 280) {
+        return Response.json(
+            { message: "投稿は280文字以内で入力してください" },
+            { status: 400 }
+        );
+    }
+
+    const userId = Number(session.user.id);
 
     if (typeof content !== "string") {
         return Response.json(
@@ -128,8 +149,6 @@ export async function POST(request: Request) {
             { status: 400 }
         );
     }
-
-    const trimmedContent = content.trim();
 
     if (
         image !== undefined &&
@@ -170,12 +189,12 @@ export async function POST(request: Request) {
         }
     }
 
-    const post = await prisma.post.create({
+    await prisma.post.create({
         data: {
-            content: trimmedContent,
-            image: image ?? null,
-            authorId: Number(session.user.id),
-            replyToId: replyToId ?? null,
+            content: content.trim(),
+            image,
+            authorId: userId,
+            replyToId,
         },
     });
 

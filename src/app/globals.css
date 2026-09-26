@@ -115,15 +115,25 @@ button {
 }
 
 .primary-button {
+  background-color: white;
+  color: black;
   border: none;
   border-radius: 9999px;
 
-  padding: 8px 18px;
+  padding: 0 16px;
+  height: 40px;
 
-  background: #0f1419;
-  color: white;
-
+  font-size: 15px;
   font-weight: 700;
+  line-height: 20px;
+
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  background-color: #555;
+  color: #999;
+  cursor: default;
 }
 
 /* =========================

@@ -163,7 +163,7 @@ export default async function PostDetail({ params }: Props) {
                 <article>
                     <p>返信先</p>
 
-                    <Link href={`/users${post.replyTo.author.username}`}>
+                    <Link href={`/users/${post.replyTo.author.username}`}>
                         <strong>
                             {post.replyTo.author.name}
                         </strong>
@@ -241,6 +241,7 @@ export default async function PostDetail({ params }: Props) {
                         />
                     ))
                 )}
-            </section>        </main>
+            </section>
+        </main>
     );
 }
